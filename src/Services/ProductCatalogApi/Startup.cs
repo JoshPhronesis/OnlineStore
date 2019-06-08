@@ -27,10 +27,16 @@ namespace ProductCatalogApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var server = Configuration["DatabaseServer"];
+            var database = Configuration["DatabaseName"];
+            var user = Configuration["DatabaseUser"];
+            var password = Configuration["DatabaseUserPassword"];
+            var connestionString = $"Server={server};Database={database};User={user};Password={password}";
+
             services.Configure<Settings>(Configuration);
             services.AddDbContext<CatalogContext>(options =>
             {
-                options.UseSqlServer(Configuration["ConnectionString"]);
+                options.UseSqlServer(connestionString);
             });
             //services.AddSwaggerGen()
             services.AddSwaggerGen(opt =>
