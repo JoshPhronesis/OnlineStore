@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ProductCatalogApi.Data;
 using ProductCatalogApi.Helpers;
+using ShoesOnContainers.Services.ProductCatalogApi;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace ProductCatalogApi
@@ -33,7 +34,7 @@ namespace ProductCatalogApi
             var password = Configuration["DatabaseUserPassword"];
             var connestionString = $"Server={server};Database={database};User={user};Password={password}";
 
-            services.Configure<Settings>(Configuration);
+            services.Configure<CatalogSettings>(Configuration);
             services.AddDbContext<CatalogContext>(options =>
             {
                 options.UseSqlServer(connestionString);

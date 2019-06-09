@@ -10,6 +10,7 @@ using ProductCatalogApi.Data;
 using ProductCatalogApi.Domain;
 using ProductCatalogApi.Helpers;
 using ProductCatalogApi.ViewModels;
+using ShoesOnContainers.Services.ProductCatalogApi;
 
 namespace ProductCatalogApi.Controllers
 {
@@ -18,12 +19,13 @@ namespace ProductCatalogApi.Controllers
     public class CatalogController : Controller
     {
         private readonly CatalogContext _context;
-        private readonly IOptions<Settings> _settings;
+        private readonly CatalogSettings _settings;
 
-        public CatalogController(CatalogContext catalogContext, IOptions<Settings> settings)
+
+        public CatalogController(CatalogContext catalogContext, IOptionsSnapshot<CatalogSettings> settings)
         {
             this._context = catalogContext;
-            this._settings = settings;
+            this._settings = settings.Value;
             _context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         }
 
@@ -54,7 +56,7 @@ namespace ProductCatalogApi.Controllers
             var item = await _context.CatalogItems.SingleOrDefaultAsync(c => c.Id == id);
             if (item != null)
             {
-                item.PictureUrl = item.PictureUrl.Replace("http://externalcatalogbaseurltobereplaced", _settings.Value.ExternalBaseUrl);
+                item.PictureUrl = item.PictureUrl.Replace("http://externalcatalogbaseurltobereplaced", _settings.ExternalCatalogBaseUrl);
                 return Ok(item);
             }
 
@@ -71,7 +73,8 @@ namespace ProductCatalogApi.Controllers
                                         .Skip(pageSize * pageIndex)
                                         .Take(pageSize)
                                         .ToListAsync();
-            itemsOnPage = ChangeUrl(itemsOnPage);
+            itemsOnPage = ChangeUriPlaceholder(itemsOnPage);
+
 
             return Ok(new PaginatedItemsViewModel<CatalogItem>(pageIndex, pageSize, (int)totalItemsCount, itemsOnPage));
         }
@@ -89,7 +92,8 @@ namespace ProductCatalogApi.Controllers
                                         .Skip(pageSize * pageIndex)
                                         .Take(pageSize)
                                         .ToListAsync();
-            itemsOnPage = ChangeUrl(itemsOnPage);
+            itemsOnPage = ChangeUriPlaceholder(itemsOnPage);
+
 
             return Ok(new PaginatedItemsViewModel<CatalogItem>(pageIndex, pageSize, (int)totalItemsCount, itemsOnPage));
         }
@@ -115,7 +119,8 @@ namespace ProductCatalogApi.Controllers
                                         .Skip(pageSize * pageIndex)
                                         .Take(pageSize)
                                         .ToListAsync();
-            itemsOnPage = ChangeUrl(itemsOnPage);
+            itemsOnPage = ChangeUriPlaceholder(itemsOnPage);
+
 
             return Ok(new PaginatedItemsViewModel<CatalogItem>(pageIndex, pageSize, (int)totalItemsCount, itemsOnPage));
         }
@@ -177,9 +182,14 @@ namespace ProductCatalogApi.Controllers
 
         }
 
-        private List<CatalogItem> ChangeUrl(List<CatalogItem> items)
+        private List<CatalogItem> ChangeUriPlaceholder(List<CatalogItem> items)
         {
-            items.ForEach(i => i.PictureUrl.Replace("http://externalcatalogbaseurltobereplaced", _settings.Value.ExternalBaseUrl));
+            var baseUri = _settings.ExternalCatalogBaseUrl;
+
+            items.ForEach(x =>
+            {
+                x.PictureUrl = x.PictureUrl.Replace("http://externalcatalogbaseurltobereplaced", baseUri);
+            });
             return items;
         }
     }
